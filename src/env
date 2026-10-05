@@ -1,0 +1,13 @@
+ATLAS_ORG_ID="6aa7ce6a270527c9cf982a14"
+ATLAS_ORG_URL="https://cloud.mongodb.com/v2#/org/6aa7ce6a270527c9cf982a14/projects"
+ATLAS_CLUSTER="cluster0.awdizt0.mongodb.net"
+ATLAS_DB="helplineems"
+ATLAS_DATABASE_URL="mongodb+srv://helplineorgpk_db_user:QlVKHY2RCQYcez82@cluster0.awdizt0.mongodb.net/helplineems?retryWrites=true&w=majority"
+
+DATABASE_URL="mongodb://127.0.0.1:27017/helplineems?replicaSet=rs0"
+MONGODB_URI="mongodb://127.0.0.1:27017/helplineems?replicaSet=rs0"
+MONGODB_USERNAME="helplineorgpk_db_user"
+MONGODB_PASSWORD="QlVKHY2RCQYcez82"
+JWT_SECRET="helpline-ems-change-this-in-production-super-secret"
+
+EXPO_PUBLIC_API_URL="https://ams.helplinewelfaretrust.org"

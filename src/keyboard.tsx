@@ -69,20 +69,22 @@ export function FormScroll({
           target.measureInWindow((_x, y, _width, height) => {
             const { height: keyboardHeight, windowShrunk } = keyboardRef.current;
             const covered = padForKeyboard && !windowShrunk ? keyboardHeight : 0;
-            const visibleBottom = Dimensions.get("window").height - covered;
-            const overflow = y + height + 24 - visibleBottom;
+            const visibleBottom = Dimensions.get("window").height - covered - 12;
+            const overflow = y + height + 20 - visibleBottom;
             if (overflow > 8) {
-              ref.current?.scrollTo({ y: scrollY.current + overflow, animated: true });
+              ref.current?.scrollTo({ y: Math.max(0, scrollY.current + overflow), animated: true });
             }
           });
-        }, Platform.OS === "ios" ? 60 : 140);
+        }, 280);
       },
     }),
     [padForKeyboard]
   );
 
   useEffect(() => {
-    if (keyboard.height > 0) api.reveal(null);
+    if (keyboard.height === 0) return;
+    const timer = setTimeout(() => api.reveal(null), 320);
+    return () => clearTimeout(timer);
   }, [api, keyboard.height]);
 
   const extraPad = padForKeyboard && !keyboard.windowShrunk ? keyboard.height : 0;
@@ -91,8 +93,9 @@ export function FormScroll({
     <KeyboardScrollContext.Provider value={api}>
       <ScrollView
         ref={ref}
-        automaticallyAdjustKeyboardInsets={Platform.OS === "ios" && padForKeyboard}
-        contentContainerStyle={[contentContainerStyle, extraPad > 0 && Platform.OS === "android" ? { paddingBottom: extraPad + 28 } : null]}
+        automaticallyAdjustKeyboardInsets={false}
+        contentContainerStyle={[contentContainerStyle, extraPad > 0 ? { paddingBottom: extraPad + 24 } : null]}
+        contentInsetAdjustmentBehavior="never"
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         onScroll={(event) => {

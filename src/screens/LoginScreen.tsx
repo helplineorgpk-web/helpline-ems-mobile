@@ -5,13 +5,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../auth";
 import { colors, shadow } from "../theme";
 import { Button, Field, HeroWash } from "../components/ui";
-import { FormScroll } from "../keyboard";
+import { FormScroll, useKeyboardHeight } from "../keyboard";
 import { Pop, Rise } from "../motion";
 import { Ionicons } from "@expo/vector-icons";
 
 export function LoginScreen() {
   const { login } = useAuth();
   const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardHeight();
+  const compact = keyboard.height > 0;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -54,22 +56,40 @@ export function LoginScreen() {
     <View style={styles.wrap}>
       <StatusBar style="light" />
       <FormScroll contentContainerStyle={styles.content}>
-        <HeroWash style={[styles.hero, { paddingTop: Math.max(insets.top, 20) + 18 }]}>
-          <Pop>
-            <View style={styles.mark}>
-              <Text style={styles.markText}>H</Text>
-            </View>
-          </Pop>
-          <Rise delay={80}>
-            <Text style={styles.brand}>HELPLINE</Text>
-            <Text style={styles.heroTitle}>Welfare Trust</Text>
-            <Text style={styles.heroSub}>Staff attendance and daily reports, in one calm place.</Text>
-          </Rise>
+        <HeroWash
+          style={[
+            styles.hero,
+            compact && styles.heroCompact,
+            { paddingTop: Math.max(insets.top, 16) + (compact ? 2 : 14) },
+          ]}
+        >
+          <View style={styles.brandRow}>
+            <Pop>
+              <View style={[styles.mark, compact && styles.markCompact]}>
+                <Text style={[styles.markText, compact && styles.markTextCompact]}>H</Text>
+              </View>
+            </Pop>
+            <Rise delay={80}>
+              <Text style={styles.brand}>HELPLINE WELFARE TRUST</Text>
+              <Text style={[styles.heroTitle, compact && styles.heroTitleCompact]}>{compact ? "Sign in" : "Staff"}</Text>
+            </Rise>
+          </View>
+          {compact ? null : (
+            <Text style={styles.heroSub}>Attendance and daily reports for the team on duty.</Text>
+          )}
         </HeroWash>
 
-        <Animated.View style={[styles.sheet, shadow.card, { opacity: sheetOpacity, transform: [{ translateY: sheet }] }]}>
+        <Animated.View
+          style={[
+            styles.sheet,
+            shadow.card,
+            compact && styles.sheetCompact,
+            { opacity: sheetOpacity, transform: [{ translateY: sheet }] },
+          ]}
+        >
+          <Text style={styles.kicker}>Staff portal</Text>
           <Text style={styles.sheetTitle}>Sign in to duty</Text>
-          <Text style={styles.sheetSub}>Use the email and password given by admin.</Text>
+          <Text style={styles.sheetSub}>Use the email and password from your admin.</Text>
           {error ? (
             <View style={styles.error}>
               <Ionicons name="alert-circle" size={18} color={colors.danger} />
@@ -103,10 +123,6 @@ export function LoginScreen() {
             value={password}
           />
           <Button icon="log-in-outline" label="Continue" loading={loading} onPress={onSubmit} />
-          <View style={styles.hint}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={colors.leafDark} />
-            <Text style={styles.hintText}>Check-in starts automatically when the app opens.</Text>
-          </View>
         </Animated.View>
       </FormScroll>
     </View>
@@ -115,40 +131,53 @@ export function LoginScreen() {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.canvas },
-  content: { paddingBottom: 36 },
+  content: { flexGrow: 1, paddingBottom: 28 },
   hero: {
     paddingHorizontal: 24,
-    paddingBottom: 72,
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
+    paddingBottom: 56,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
+  heroCompact: { paddingBottom: 22 },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: 14 },
   mark: {
-    width: 64,
-    height: 64,
-    borderRadius: 22,
+    width: 58,
+    height: 58,
+    borderRadius: 18,
     backgroundColor: "rgba(255,255,255,0.12)",
     borderWidth: 1,
     borderColor: "rgba(201,163,92,0.55)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 18,
   },
-  markText: { color: colors.gold, fontSize: 28, fontWeight: "900" },
-  brand: { color: colors.gold, fontSize: 12, fontWeight: "900", letterSpacing: 2.4 },
-  heroTitle: { color: colors.white, fontSize: 36, fontWeight: "800", marginTop: 4, letterSpacing: -0.8 },
-  heroSub: { color: "rgba(255,255,255,0.74)", marginTop: 8, fontSize: 15, lineHeight: 22, maxWidth: 280 },
+  markCompact: { width: 40, height: 40, borderRadius: 14 },
+  markText: { color: colors.gold, fontSize: 26, fontWeight: "900" },
+  markTextCompact: { fontSize: 18 },
+  brand: { color: colors.gold, fontSize: 11, fontWeight: "800", letterSpacing: 1.6 },
+  heroTitle: { color: colors.white, fontSize: 34, fontWeight: "800", marginTop: 2, letterSpacing: -0.8 },
+  heroTitleCompact: { fontSize: 22, marginTop: 0 },
+  heroSub: { color: "rgba(255,255,255,0.74)", marginTop: 14, fontSize: 15, lineHeight: 22, maxWidth: 280 },
   sheet: {
     marginHorizontal: 16,
-    marginTop: -40,
+    marginTop: -28,
     backgroundColor: colors.paper,
     borderRadius: 28,
     paddingHorizontal: 18,
-    paddingTop: 22,
+    paddingTop: 20,
     paddingBottom: 18,
     borderWidth: 1,
     borderColor: "rgba(235,228,214,0.9)",
   },
-  sheetTitle: { fontSize: 24, fontWeight: "800", color: colors.ink, letterSpacing: -0.4 },
+  sheetCompact: { marginTop: -12 },
+  kicker: {
+    color: colors.leafDark,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginBottom: 6,
+  },
+  sheetTitle: { fontSize: 26, fontWeight: "800", color: colors.ink, letterSpacing: -0.4 },
   sheetSub: { color: colors.muted, marginTop: 6, marginBottom: 18, lineHeight: 20 },
   error: {
     flexDirection: "row",
@@ -160,15 +189,4 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   errorText: { color: colors.danger, fontWeight: "600", flex: 1 },
-  hint: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    marginTop: 16,
-    backgroundColor: colors.leafSoft,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  hintText: { color: colors.forest, flex: 1, fontSize: 13, lineHeight: 18, fontWeight: "600" },
 });

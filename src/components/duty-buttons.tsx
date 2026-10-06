@@ -65,7 +65,12 @@ export function DutyButtons() {
     setError(null);
     try {
       if (!reportSaved) {
-        await api.submitReport(token, { projectId, summary: summary.trim(), details: details.trim() });
+        const alreadyWrote = today?.reports?.some((report) => report.project?.id === projectId);
+        try {
+          await api.submitReport(token, { projectId, summary: summary.trim(), details: details.trim() });
+        } catch (err) {
+          if (!alreadyWrote) throw err;
+        }
         setReportSaved(true);
       }
       await checkout();

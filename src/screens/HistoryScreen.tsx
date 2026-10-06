@@ -3,6 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native
 import { useAuth } from "../auth";
 import { api } from "../api";
 import { Badge, Card, EmptyState, IconWell, Screen, SectionLabel, Title } from "../components/ui";
+import { Rise } from "../motion";
 import { durationBetween, formatDate, formatTime } from "../datetime";
 import { iconForProject } from "../icons";
 import type { Attendance, DailyReport } from "../types";
@@ -36,6 +37,7 @@ export function HistoryScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl onRefresh={load} refreshing={busy} tintColor={colors.leaf} />}
       >
+        <Rise>
         <Title>History</Title>
         <Text style={styles.lead}>Check-in times and reports in Pakistan time.</Text>
 
@@ -80,6 +82,7 @@ export function HistoryScreen() {
             </Card>
           ))
         )}
+        </Rise>
       </ScrollView>
     </Screen>
   );

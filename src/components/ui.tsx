@@ -1,5 +1,7 @@
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -11,6 +13,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { colors, radii, shadow } from "../theme";
 import type { IconName } from "../icons";
 
@@ -30,8 +33,21 @@ export function Card({ children, style }: { children: React.ReactNode; style?: S
   return <View style={[styles.card, shadow.card, style]}>{children}</View>;
 }
 
+export function HeroWash({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  return (
+    <LinearGradient colors={[colors.forestDeep, colors.forest, "#1c5533"]} style={[styles.heroWash, style]}>
+      {children}
+    </LinearGradient>
+  );
+}
+
 export function Title({ children }: { children: React.ReactNode }) {
-  return <Text style={styles.title}>{children}</Text>;
+  return (
+    <View>
+      <View style={styles.titleRule} />
+      <Text style={styles.title}>{children}</Text>
+    </View>
+  );
 }
 
 export function Muted({ children, style }: { children: React.ReactNode; style?: StyleProp<TextStyle> }) {
@@ -74,7 +90,7 @@ export function IconWell({
     <View
       style={[
         styles.well,
-        { width: size, height: size, borderRadius: size / 2.6, backgroundColor: palette.bg },
+        { width: size, height: size, borderRadius: size / 2.4, backgroundColor: palette.bg },
       ]}
     >
       <Ionicons name={name} size={size * 0.42} color={palette.fg} />
@@ -90,14 +106,17 @@ export function Avatar({ name, size = 56 }: { name?: string | null; size?: numbe
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join("") || "H";
+  const inner = size - 8;
   return (
     <View
       style={[
-        styles.avatar,
+        styles.avatarRing,
         { width: size, height: size, borderRadius: size / 2 },
       ]}
     >
-      <Text style={[styles.avatarText, { fontSize: size * 0.34 }]}>{initials}</Text>
+      <View style={[styles.avatar, { width: inner, height: inner, borderRadius: inner / 2 }]}>
+        <Text style={[styles.avatarText, { fontSize: inner * 0.36 }]}>{initials}</Text>
+      </View>
     </View>
   );
 }
@@ -105,18 +124,51 @@ export function Avatar({ name, size = 56 }: { name?: string | null; size?: numbe
 export function Field({
   label,
   icon,
+  secureTextEntry,
   ...props
 }: TextInputProps & { label: string; icon?: IconName }) {
+  const [hidden, setHidden] = useState(Boolean(secureTextEntry));
+  const [focused, setFocused] = useState(false);
+  const canReveal = Boolean(secureTextEntry);
+
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.inputWrap}>
-        {icon ? <Ionicons name={icon} size={18} color={colors.muted} style={styles.inputIcon} /> : null}
+        {icon ? (
+          <Ionicons name={icon} size={18} color={focused ? colors.leafDark : colors.muted} style={styles.inputIcon} />
+        ) : null}
         <TextInput
-          placeholderTextColor={colors.muted}
-          style={[styles.input, icon && styles.inputWithIcon, props.multiline && styles.textarea]}
+          placeholderTextColor="#8d998f"
           {...props}
+          onBlur={(event) => {
+            setFocused(false);
+            props.onBlur?.(event);
+          }}
+          onFocus={(event) => {
+            setFocused(true);
+            props.onFocus?.(event);
+          }}
+          secureTextEntry={canReveal ? hidden : secureTextEntry}
+          style={[
+            styles.input,
+            focused && styles.inputFocused,
+            icon && styles.inputWithIcon,
+            canReveal && styles.inputWithToggle,
+            props.multiline && styles.textarea,
+            props.style,
+          ]}
         />
+        {canReveal ? (
+          <Pressable
+            accessibilityLabel={hidden ? "Show password" : "Hide password"}
+            hitSlop={8}
+            onPress={() => setHidden((value) => !value)}
+            style={styles.eyeBtn}
+          >
+            <Ionicons name={hidden ? "eye-outline" : "eye-off-outline"} size={20} color={colors.muted} />
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -138,39 +190,44 @@ export function Button({
   icon?: IconName;
 }) {
   const light = tone === "ghost" || tone === "danger";
+  const filled = tone === "primary" || tone === "dark";
+  const scale = useRef(new Animated.Value(1)).current;
+  const locked = disabled || loading;
+
+  function pressIn() {
+    if (locked) return;
+    Animated.spring(scale, { toValue: 0.975, speed: 40, bounciness: 0, useNativeDriver: true }).start();
+  }
+
+  function pressOut() {
+    Animated.spring(scale, { toValue: 1, speed: 24, bounciness: 4, useNativeDriver: true }).start();
+  }
+
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled || loading}
-      style={({ pressed }) => [
-        styles.btn,
-        tone === "primary" && styles.btnPrimary,
-        tone === "dark" && styles.btnDark,
-        tone === "ghost" && styles.btnGhost,
-        tone === "danger" && styles.btnDanger,
-        (disabled || loading) && styles.btnDisabled,
-        pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
-      ]}
-    >
-      {loading ? (
-        <ActivityIndicator color={light ? colors.forest : colors.white} />
-      ) : (
-        <View style={styles.btnInner}>
-          {icon ? (
-            <Ionicons name={icon} size={18} color={tone === "danger" ? colors.danger : light ? colors.ink : colors.white} />
-          ) : null}
-          <Text
-            style={[
-              styles.btnText,
-              tone === "ghost" && { color: colors.ink },
-              tone === "danger" && { color: colors.danger },
-            ]}
-          >
-            {label}
-          </Text>
-        </View>
-      )}
-    </Pressable>
+    <Animated.View style={[styles.btnWrap, { transform: [{ scale }] }, locked && styles.btnDisabled, !locked && filled && shadow.float]}>
+      <Pressable disabled={locked} onPress={onPress} onPressIn={pressIn} onPressOut={pressOut} style={[styles.btn, tone === "ghost" && styles.btnGhost, tone === "danger" && styles.btnDanger]}>
+        {filled ? (
+          <LinearGradient
+            colors={tone === "primary" ? [colors.leaf, colors.leafDark] : [colors.forest, colors.forestDeep]}
+            end={{ x: 1, y: 1 }}
+            start={{ x: 0, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : null}
+        {loading ? (
+          <ActivityIndicator color={light ? colors.forest : colors.white} />
+        ) : (
+          <View style={styles.btnInner}>
+            {icon ? (
+              <Ionicons name={icon} size={18} color={tone === "danger" ? colors.danger : light ? colors.ink : colors.white} />
+            ) : null}
+            <Text style={[styles.btnText, tone === "ghost" && { color: colors.ink }, tone === "danger" && { color: colors.danger }]}>
+              {label}
+            </Text>
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -211,28 +268,36 @@ export function EmptyState({
 }) {
   return (
     <Card style={styles.empty}>
-      <IconWell name={icon} tone="muted" size={52} />
+      <IconWell name={icon} tone="gold" size={56} />
       <Text style={styles.emptyTitle}>{title}</Text>
-      <Muted>{hint}</Muted>
+      <Muted style={styles.emptyHint}>{hint}</Muted>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.canvas },
-  padded: { paddingHorizontal: 20, paddingTop: 8 },
+  padded: { paddingHorizontal: 20, paddingTop: 16 },
+  heroWash: { overflow: "hidden" },
   card: {
     backgroundColor: colors.paper,
-    borderColor: "rgba(226,221,211,0.9)",
+    borderColor: "rgba(235,228,214,0.95)",
     borderWidth: 1,
     borderRadius: radii.lg,
     padding: 16,
   },
+  titleRule: {
+    width: 28,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.gold,
+    marginBottom: 10,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "800",
     color: colors.ink,
-    letterSpacing: -0.4,
+    letterSpacing: -0.6,
   },
   muted: {
     color: colors.muted,
@@ -249,6 +314,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1.1,
   },
   well: { alignItems: "center", justifyContent: "center" },
+  avatarRing: {
+    backgroundColor: colors.goldSoft,
+    borderWidth: 1.5,
+    borderColor: colors.gold,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   avatar: {
     backgroundColor: colors.forest,
     alignItems: "center",
@@ -266,32 +338,47 @@ const styles = StyleSheet.create({
   },
   inputWrap: { position: "relative", justifyContent: "center" },
   inputIcon: { position: "absolute", left: 14, zIndex: 1 },
+  eyeBtn: {
+    position: "absolute",
+    right: 8,
+    top: 0,
+    bottom: 0,
+    zIndex: 1,
+    width: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   input: {
-    backgroundColor: colors.paper,
+    backgroundColor: "#fff",
     borderColor: colors.line,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderRadius: radii.md,
     paddingHorizontal: 14,
-    paddingVertical: 13,
+    paddingVertical: 14,
     fontSize: 16,
     color: colors.ink,
   },
+  inputFocused: {
+    borderColor: colors.leaf,
+    backgroundColor: "#f7fcf8",
+  },
   inputWithIcon: { paddingLeft: 42 },
+  inputWithToggle: { paddingRight: 46 },
   textarea: { minHeight: 120, textAlignVertical: "top", paddingTop: 14 },
+  btnWrap: { width: "100%", borderRadius: radii.md },
   btn: {
-    minHeight: 52,
+    minHeight: 54,
     width: "100%",
     borderRadius: radii.md,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 12,
+    overflow: "hidden",
   },
   btnInner: { flexDirection: "row", alignItems: "center", gap: 8 },
-  btnPrimary: { backgroundColor: colors.leaf },
-  btnDark: { backgroundColor: colors.forest },
   btnGhost: { backgroundColor: "transparent", borderWidth: 1, borderColor: colors.line },
   btnDanger: { backgroundColor: colors.dangerSoft },
-  btnDisabled: { opacity: 0.5 },
+  btnDisabled: { opacity: 0.48 },
   btnText: { color: colors.white, fontWeight: "800", fontSize: 16 },
   badge: {
     alignSelf: "flex-start",
@@ -303,6 +390,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   badgeText: { fontSize: 11, fontWeight: "800" },
-  empty: { alignItems: "flex-start", gap: 8, marginTop: 8 },
-  emptyTitle: { fontSize: 17, fontWeight: "800", color: colors.ink, marginTop: 4 },
+  empty: { alignItems: "center", gap: 8, marginTop: 8, paddingVertical: 22 },
+  emptyTitle: { fontSize: 17, fontWeight: "800", color: colors.ink, marginTop: 4, textAlign: "center" },
+  emptyHint: { textAlign: "center" },
 });

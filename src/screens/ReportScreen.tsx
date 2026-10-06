@@ -4,6 +4,7 @@ import { useAuth } from "../auth";
 import { api } from "../api";
 import { DutyButtons } from "../components/duty-buttons";
 import { Badge, Button, Card, EmptyState, Field, Icon, IconWell, Screen, SectionLabel, Title } from "../components/ui";
+import { Rise } from "../motion";
 import { formatTime } from "../datetime";
 import { iconForProject } from "../icons";
 import { colors } from "../theme";
@@ -39,7 +40,8 @@ export function ReportScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <Rise>
         <Title>Daily report</Title>
         <Text style={styles.lead}>
           Check in when you start. You can send more than one report today, then check out when you leave.
@@ -118,6 +120,7 @@ export function ReportScreen() {
             />
           </View>
         )}
+        </Rise>
       </ScrollView>
     </Screen>
   );
@@ -127,7 +130,7 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 40 },
   lead: { color: colors.muted, marginTop: 6, marginBottom: 10, lineHeight: 21, fontSize: 15 },
   choice: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 10 },
-  choiceOn: { borderColor: colors.leaf, backgroundColor: colors.leafSoft },
+  choiceOn: { borderColor: colors.leaf, backgroundColor: colors.leafSoft, borderLeftWidth: 3, borderLeftColor: colors.gold },
   choiceTitle: { fontWeight: "800", color: colors.ink, fontSize: 16 },
   choiceMeta: { color: colors.muted, marginTop: 2, fontWeight: "600", fontSize: 12 },
   error: {

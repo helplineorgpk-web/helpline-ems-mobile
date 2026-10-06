@@ -1,8 +1,8 @@
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../auth";
 import { API_BASE } from "../api";
-import { Avatar, Button, Card, Icon, IconWell, Screen } from "../components/ui";
+import { Avatar, Button, Card, HeroWash, Icon, IconWell, Screen } from "../components/ui";
+import { Rise } from "../motion";
 import { colors } from "../theme";
 
 export function ProfileScreen() {
@@ -11,15 +11,17 @@ export function ProfileScreen() {
   return (
     <Screen padded={false}>
       <ScrollView contentContainerStyle={styles.content}>
-        <LinearGradient colors={[colors.forestDeep, colors.forest]} style={styles.hero}>
-          <Avatar name={employee?.name} size={76} />
-          <Text style={styles.name}>{employee?.name}</Text>
-          <Text style={styles.role}>
-            {employee?.role === "SUPERVISOR" ? "Supervisor" : "Staff"} · {employee?.designation}
-          </Text>
-        </LinearGradient>
+        <HeroWash style={styles.hero}>
+          <Rise style={styles.heroInner}>
+            <Avatar name={employee?.name} size={84} />
+            <Text style={styles.name}>{employee?.name}</Text>
+            <Text style={styles.role}>
+              {employee?.role === "SUPERVISOR" ? "Supervisor" : "Staff"} · {employee?.designation}
+            </Text>
+          </Rise>
+        </HeroWash>
 
-        <View style={styles.body}>
+        <Rise delay={80} style={styles.body}>
           <Card>
             <Row icon="id-card-outline" label="Employee code" value={employee?.employeeCode} />
             <Row icon="mail-outline" label="Email" value={employee?.email} />
@@ -59,7 +61,7 @@ export function ProfileScreen() {
             tone="danger"
           />
           <Text style={styles.api}>Connected to {API_BASE.replace(/^https?:\/\//, "")}</Text>
-        </View>
+        </Rise>
       </ScrollView>
     </Screen>
   );
@@ -92,16 +94,17 @@ function Row({
 
 const styles = StyleSheet.create({
   content: { paddingBottom: 36 },
+  heroInner: { alignItems: "center" },
   hero: {
     alignItems: "center",
-    paddingTop: 18,
-    paddingBottom: 36,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    paddingTop: 22,
+    paddingBottom: 48,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
   name: { color: colors.white, fontSize: 24, fontWeight: "800", marginTop: 14 },
   role: { color: "rgba(255,255,255,0.72)", marginTop: 4, fontWeight: "600" },
-  body: { paddingHorizontal: 20, marginTop: -18 },
+  body: { paddingHorizontal: 18, marginTop: -24 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },
   border: { borderBottomWidth: 1, borderBottomColor: colors.line },
   label: { color: colors.muted, fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.6 },

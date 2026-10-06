@@ -3,6 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native
 import { useAuth } from "../auth";
 import { api } from "../api";
 import { Avatar, Badge, Card, EmptyState, IconWell, Screen, Title } from "../components/ui";
+import { Rise } from "../motion";
 import { formatDate, formatTime } from "../datetime";
 import type { TeamMember } from "../types";
 import { colors } from "../theme";
@@ -41,6 +42,7 @@ export function TeamScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl onRefresh={load} refreshing={busy} tintColor={colors.leaf} />}
       >
+        <Rise>
         <Title>Team</Title>
         <Text style={styles.lead}>
           Staff on your projects · {date ? formatDate(date) : "today"} · Pakistan time
@@ -111,6 +113,7 @@ export function TeamScreen() {
             )}
           </Card>
         ))}
+        </Rise>
       </ScrollView>
     </Screen>
   );
@@ -123,11 +126,13 @@ const styles = StyleSheet.create({
   stat: {
     flex: 1,
     backgroundColor: colors.paper,
-    borderRadius: 18,
-    paddingVertical: 14,
+    borderRadius: 20,
+    paddingVertical: 16,
     paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: colors.line,
+    borderTopWidth: 3,
+    borderTopColor: colors.gold,
   },
   statNum: { fontSize: 22, fontWeight: "800", color: colors.forest },
   statLabel: { color: colors.muted, fontWeight: "700", fontSize: 11, marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 },

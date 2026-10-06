@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../auth";
 import { api } from "../api";
 import { DutyButtons } from "../components/duty-buttons";
@@ -8,6 +8,7 @@ import { Rise } from "../motion";
 import { formatTime } from "../datetime";
 import { iconForProject } from "../icons";
 import { colors } from "../theme";
+import { FormScroll } from "../keyboard";
 
 export function ReportScreen() {
   const { token, projects, today, refresh } = useAuth();
@@ -40,7 +41,7 @@ export function ReportScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <FormScroll contentContainerStyle={styles.content}>
         <Rise>
         <Title>Daily report</Title>
         <Text style={styles.lead}>
@@ -121,7 +122,7 @@ export function ReportScreen() {
           </View>
         )}
         </Rise>
-      </ScrollView>
+      </FormScroll>
     </Screen>
   );
 }

@@ -28,6 +28,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "usesCleartextTraffic": true,
+      "softwareKeyboardLayoutMode": "resize",
       "package": "com.anonymous.helplinestaff"
     },
     "web": {

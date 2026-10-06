@@ -13,6 +13,7 @@ import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { TeamScreen } from "./src/screens/TeamScreen";
 import { tabIcons } from "./src/icons";
 import { colors, shadow } from "./src/theme";
+import { useKeyboardHeight } from "./src/keyboard";
 
 type Tab = "today" | "report" | "history" | "team" | "profile";
 
@@ -21,6 +22,7 @@ function Root() {
   const [tab, setTab] = useState<Tab>("today");
   const isSupervisor = employee?.role === "SUPERVISOR";
   const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardHeight();
 
   useEffect(() => {
     setTab("today");
@@ -55,7 +57,7 @@ function Root() {
         {tab === "team" && isSupervisor ? <TeamScreen /> : null}
         {tab === "profile" ? <ProfileScreen /> : null}
       </View>
-      <View style={[styles.tabDock, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      {keyboard.height === 0 ? <View style={[styles.tabDock, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <View style={[styles.tabs, shadow.bar]}>
           {tabs.map((item) => (
             <TabButton
@@ -67,7 +69,7 @@ function Root() {
             />
           ))}
         </View>
-      </View>
+      </View> : null}
     </SafeAreaView>
   );
 }

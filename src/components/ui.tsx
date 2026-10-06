@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { forwardRef, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors, radii, shadow } from "../theme";
 import type { IconName } from "../icons";
+import { useRevealField } from "../keyboard";
 
 export function Screen({
   children,
@@ -121,24 +122,25 @@ export function Avatar({ name, size = 56 }: { name?: string | null; size?: numbe
   );
 }
 
-export function Field({
-  label,
-  icon,
-  secureTextEntry,
-  ...props
-}: TextInputProps & { label: string; icon?: IconName }) {
+export const Field = forwardRef<TextInput, TextInputProps & { label: string; icon?: IconName }>(function Field(
+  { label, icon, secureTextEntry, ...props },
+  ref
+) {
   const [hidden, setHidden] = useState(Boolean(secureTextEntry));
   const [focused, setFocused] = useState(false);
+  const box = useRef<View>(null);
+  const reveal = useRevealField();
   const canReveal = Boolean(secureTextEntry);
 
   return (
-    <View style={styles.field}>
+    <View ref={box} style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.inputWrap}>
         {icon ? (
           <Ionicons name={icon} size={18} color={focused ? colors.leafDark : colors.muted} style={styles.inputIcon} />
         ) : null}
         <TextInput
+          ref={ref}
           placeholderTextColor="#8d998f"
           {...props}
           onBlur={(event) => {
@@ -148,6 +150,7 @@ export function Field({
           onFocus={(event) => {
             setFocused(true);
             props.onFocus?.(event);
+            reveal?.reveal(box.current);
           }}
           secureTextEntry={canReveal ? hidden : secureTextEntry}
           style={[
@@ -172,7 +175,7 @@ export function Field({
       </View>
     </View>
   );
-}
+});
 
 export function Button({
   label,

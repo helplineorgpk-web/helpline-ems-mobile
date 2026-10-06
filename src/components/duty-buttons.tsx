@@ -1,24 +1,16 @@
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Dimensions, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { colors, radii, shadow } from "../theme";
+import { FormScroll, useKeyboardHeight } from "../keyboard";
 import { Button, Field } from "./ui";
 
 export function DutyButtons() {
   const { token, today, projects, checkin, checkout } = useAuth();
   const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardHeight();
   const [busy, setBusy] = useState<"in" | "out" | null>(null);
   const [open, setOpen] = useState(false);
   const [projectId, setProjectId] = useState(projects[0]?.id || "");
@@ -94,11 +86,26 @@ export function DutyButtons() {
       </View>
 
       <Modal animationType="slide" onRequestClose={close} transparent visible={open}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.modal}>
+        <View style={styles.modal}>
           <Pressable accessibilityLabel="Close report" onPress={close} style={styles.backdrop} />
-          <View style={[styles.sheet, shadow.bar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          <View
+            style={[
+              styles.sheet,
+              shadow.bar,
+              {
+                marginBottom: keyboard.height,
+                maxHeight: Dimensions.get("window").height - keyboard.height - insets.top - 12,
+                paddingBottom: keyboard.height > 0 ? 12 : Math.max(insets.bottom, 16),
+              },
+            ]}
+          >
             <View style={styles.handle} />
-            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <FormScroll
+              contentContainerStyle={styles.sheetContent}
+              fill={false}
+              padForKeyboard={false}
+              style={{ maxHeight: Math.max(240, Dimensions.get("window").height - keyboard.height - insets.top - 72) }}
+            >
               <Text style={styles.title}>Daily report</Text>
               <Text style={styles.lead}>Write today's report to finish checkout. Duty stays open until this is sent.</Text>
               {projects.length > 1 ? (
@@ -142,9 +149,9 @@ export function DutyButtons() {
               />
               <View style={styles.cancelGap} />
               <Button label="Cancel" onPress={close} tone="ghost" />
-            </ScrollView>
+            </FormScroll>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
     </View>
   );
@@ -163,6 +170,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingTop: 10,
   },
+  sheetContent: { paddingBottom: 8 },
   handle: {
     alignSelf: "center",
     width: 42,

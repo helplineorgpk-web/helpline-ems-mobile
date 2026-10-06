@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, StyleSheet, Text, TextInput, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../auth";
 import { colors, shadow } from "../theme";
 import { Button, Field, HeroWash } from "../components/ui";
+import { FormScroll } from "../keyboard";
 import { Pop, Rise } from "../motion";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -15,6 +16,7 @@ export function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
   const sheet = useRef(new Animated.Value(28)).current;
   const sheetOpacity = useRef(new Animated.Value(0)).current;
 
@@ -49,9 +51,9 @@ export function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.wrap}>
+    <View style={styles.wrap}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <FormScroll contentContainerStyle={styles.content}>
         <HeroWash style={[styles.hero, { paddingTop: Math.max(insets.top, 20) + 18 }]}>
           <Pop>
             <View style={styles.mark}>
@@ -76,22 +78,38 @@ export function LoginScreen() {
           ) : null}
           <Field
             autoCapitalize="none"
+            autoComplete="email"
             autoCorrect={false}
+            blurOnSubmit={false}
             icon="mail-outline"
             keyboardType="email-address"
             label="Work email"
             onChangeText={setEmail}
+            onSubmitEditing={() => passwordRef.current?.focus()}
+            returnKeyType="next"
+            textContentType="emailAddress"
             value={email}
           />
-          <Field icon="lock-closed-outline" label="Password" onChangeText={setPassword} secureTextEntry value={password} />
+          <Field
+            ref={passwordRef}
+            autoComplete="password"
+            icon="lock-closed-outline"
+            label="Password"
+            onChangeText={setPassword}
+            onSubmitEditing={onSubmit}
+            returnKeyType="done"
+            secureTextEntry
+            textContentType="password"
+            value={password}
+          />
           <Button icon="log-in-outline" label="Continue" loading={loading} onPress={onSubmit} />
           <View style={styles.hint}>
             <Ionicons name="shield-checkmark-outline" size={16} color={colors.leafDark} />
             <Text style={styles.hintText}>Check-in starts automatically when the app opens.</Text>
           </View>
         </Animated.View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </FormScroll>
+    </View>
   );
 }
 

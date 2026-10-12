@@ -55,7 +55,16 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
+      ],
+      "./plugins/withPodsXcodeproj"
     ],
     "description": "Attendance and daily reports for Helpline Welfare Trust staff."
   }

@@ -13,7 +13,7 @@
           "NSAllowsLocalNetworking": true
         }
       },
-      "bundleIdentifier": "com.helpline.staff",
+      "bundleIdentifier": "com.helplines.staff",
       "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false

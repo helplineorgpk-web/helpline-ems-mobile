@@ -11,7 +11,7 @@ npm install
 npx expo start
 ```
 
-Point the app at the admin API with `EXPO_PUBLIC_API_URL` if it is not running on port 3002 of this machine.
+Copy `.env.example` to `.env` and set `EXPO_PUBLIC_API_URL` if the admin API is not running on port 3002 of this machine. `.env` is git-ignored: the app only needs that one public URL, so never put database credentials or `JWT_SECRET` in this repo. Store builds get their URL from `eas.json`.
 
 ### Demo login
 - Email: `ahmed@helpline.org`

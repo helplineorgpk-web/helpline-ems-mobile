@@ -14,13 +14,13 @@ import type { LegalDoc } from "../legal";
 const logoMark = require("../../assets/logo-mark.png");
 
 export function LoginScreen() {
-  const { login } = useAuth();
+  const { login, error: sessionError } = useAuth();
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardHeight();
   const compact = keyboard.height > 0;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(sessionError);
   const [loading, setLoading] = useState(false);
   const [legal, setLegal] = useState<LegalDoc | null>(null);
   const passwordRef = useRef<TextInput>(null);

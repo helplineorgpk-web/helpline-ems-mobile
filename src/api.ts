@@ -29,6 +29,24 @@ type LoginResponse = {
   employee: Employee & { projects: Project[] };
 };
 
+// status is 0 when the server could not be reached at all.
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
+// Offline or server trouble: worth retrying, and no reason to sign the user out.
+export function isTemporaryError(err: unknown) {
+  return err instanceof ApiError && (err.status === 0 || err.status >= 500);
+}
+
+let onUnauthorized: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit & { token?: string | null } = {}
@@ -45,15 +63,21 @@ async function request<T>(
       },
     });
   } catch {
-    throw new Error(
+    throw new ApiError(
       __DEV__
         ? "Could not reach the staff server. Start the admin app on this computer, then try again."
-        : "Could not reach the server. Check your internet connection and try again."
+        : "Could not reach the server. Check your internet connection and try again.",
+      0
     );
   }
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && token) {
+    // The saved session expired or the account was deactivated.
+    onUnauthorized?.();
+    throw new ApiError("Your session has ended. Please sign in again.", 401);
+  }
   if (!res.ok) {
-    throw new Error((data as { error?: string }).error || `Request failed (${res.status})`);
+    throw new ApiError((data as { error?: string }).error || `Request failed (${res.status})`, res.status);
   }
   return data as T;
 }

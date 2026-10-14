@@ -22,7 +22,8 @@ export function DutyButtons() {
   const canSubmit = reportSaved || (Boolean(projectId) && summary.trim().length >= 5 && details.trim().length >= 10);
 
   useEffect(() => {
-    if (!projectId && projects[0]?.id) setProjectId(projects[0].id);
+    // Also covers a project being unassigned while it was selected.
+    if (!projects.some((project) => project.id === projectId)) setProjectId(projects[0]?.id || "");
   }, [projectId, projects]);
 
   async function onCheckin() {
@@ -37,10 +38,6 @@ export function DutyButtons() {
   }
 
   function onCheckout() {
-    if (!today?.checkedIn) {
-      Alert.alert("Check in first", "Start duty before you check out.");
-      return;
-    }
     setError(null);
     setReportSaved(false);
     setOpen(true);
@@ -57,12 +54,7 @@ export function DutyButtons() {
     setError(null);
     try {
       if (!reportSaved) {
-        const alreadyWrote = today?.reports?.some((report) => report.project?.id === projectId);
-        try {
-          await api.submitReport(token, { projectId, summary: summary.trim(), details: details.trim() });
-        } catch (err) {
-          if (!alreadyWrote) throw err;
-        }
+        await api.submitReport(token, { projectId, summary: summary.trim(), details: details.trim() });
         setReportSaved(true);
       }
       await checkout();
@@ -82,7 +74,14 @@ export function DutyButtons() {
         <Button disabled={onDuty} icon="enter-outline" label="Check in" loading={busy === "in"} onPress={onCheckin} />
       </View>
       <View style={styles.col}>
-        <Button icon="exit-outline" label="Check out" loading={busy === "out" && !open} onPress={onCheckout} tone="dark" />
+        <Button
+          disabled={!onDuty}
+          icon="exit-outline"
+          label="Check out"
+          loading={busy === "out" && !open}
+          onPress={onCheckout}
+          tone="dark"
+        />
       </View>
 
       <Modal animationType="slide" onRequestClose={close} transparent visible={open}>

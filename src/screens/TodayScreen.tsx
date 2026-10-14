@@ -11,13 +11,17 @@ import { colors } from "../theme";
 export function TodayScreen() {
   const { employee, projects, today, refresh } = useAuth();
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const firstName = employee?.name?.split(" ")[0] || "there";
   const onDuty = Boolean(today?.checkedIn && !today?.checkedOut);
 
   const onRefresh = useCallback(async () => {
     setBusy(true);
+    setError(null);
     try {
       await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not refresh");
     } finally {
       setBusy(false);
     }
@@ -49,6 +53,7 @@ export function TodayScreen() {
         </HeroWash>
 
         <View style={styles.body}>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
           <Rise delay={90}>
           <Card style={styles.attendance}>
             <View style={styles.row}>
@@ -162,4 +167,13 @@ const styles = StyleSheet.create({
   project: { flexDirection: "row", gap: 14, alignItems: "center", marginBottom: 10 },
   projectName: { fontSize: 17, fontWeight: "800", color: colors.ink, marginTop: 6 },
   projectMeta: { color: colors.muted, marginTop: 2, fontWeight: "600" },
+  error: {
+    marginBottom: 12,
+    backgroundColor: colors.dangerSoft,
+    color: colors.danger,
+    padding: 12,
+    borderRadius: 12,
+    overflow: "hidden",
+    fontWeight: "600",
+  },
 });

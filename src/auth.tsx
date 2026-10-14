@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api } from "./api";
+import { api, isTemporaryError, setUnauthorizedHandler } from "./api";
 import { clearStoredToken, getStoredToken, setStoredToken } from "./storage";
 import type { Employee, Project, TodayStatus } from "./types";
 
@@ -10,6 +10,8 @@ type AuthState = {
   projects: Project[];
   today: TodayStatus | null;
   error: string | null;
+  bootError: string | null;
+  retryBoot: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [today, setToday] = useState<TodayStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [bootError, setBootError] = useState<string | null>(null);
 
   const hydrate = useCallback(async (nextToken: string) => {
     const data = await api.me(nextToken);
@@ -36,19 +39,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const stored = await getStoredToken();
-        if (stored) await hydrate(stored);
-      } catch {
+  const boot = useCallback(async () => {
+    setReady(false);
+    setBootError(null);
+    try {
+      const stored = await getStoredToken();
+      if (stored) await hydrate(stored);
+    } catch (err) {
+      if (isTemporaryError(err)) {
+        // Keep the saved session so staff with weak signal are not signed out.
+        setBootError(err instanceof Error ? err.message : "Could not reach the server");
+      } else {
         await clearStoredToken();
         setToken(null);
-      } finally {
-        setReady(true);
       }
-    })();
+    } finally {
+      setReady(true);
+    }
   }, [hydrate]);
+
+  useEffect(() => {
+    boot();
+  }, [boot]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -59,13 +71,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [hydrate]
   );
 
-  const logout = useCallback(async () => {
+  const clearSession = useCallback(async () => {
     await clearStoredToken();
     setToken(null);
     setEmployee(null);
     setProjects([]);
     setToday(null);
+    setBootError(null);
   }, []);
+
+  const logout = useCallback(async () => {
+    setError(null);
+    await clearSession();
+  }, [clearSession]);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setError("Your session has ended. Please sign in again.");
+      clearSession();
+    });
+    return () => setUnauthorizedHandler(null);
+  }, [clearSession]);
 
   const refresh = useCallback(async () => {
     if (!token) return;
@@ -95,13 +121,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       projects,
       today,
       error,
+      bootError,
+      retryBoot: boot,
       login,
       logout,
       refresh,
       checkin,
       checkout,
     }),
-    [ready, token, employee, projects, today, error, login, logout, refresh, checkin, checkout]
+    [ready, token, employee, projects, today, error, bootError, boot, login, logout, refresh, checkin, checkout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

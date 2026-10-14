@@ -22,7 +22,8 @@ export function ReportScreen() {
   const canSubmit = Boolean(projectId) && !summaryHint && !detailsHint;
 
   useEffect(() => {
-    if (!projectId && projects[0]?.id) setProjectId(projects[0].id);
+    // Also covers a project being unassigned while it was selected.
+    if (!projects.some((project) => project.id === projectId)) setProjectId(projects[0]?.id || "");
   }, [projectId, projects]);
 
   async function submit() {
@@ -30,10 +31,11 @@ export function ReportScreen() {
     setLoading(true);
     setError(null);
     try {
-      await api.submitReport(token, { projectId, summary, details });
+      await api.submitReport(token, { projectId, summary: summary.trim(), details: details.trim() });
       setSummary("");
       setDetails("");
-      await refresh();
+      // The report is saved; a failed refresh only delays the "Submitted today" list.
+      await refresh().catch(() => {});
       Alert.alert("Report sent", "Your report was saved. Use Check out when you finish work.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit report");

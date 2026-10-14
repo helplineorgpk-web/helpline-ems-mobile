@@ -14,14 +14,18 @@ export function HistoryScreen() {
   const [reports, setReports] = useState<DailyReport[]>([]);
   const [records, setRecords] = useState<Attendance[]>([]);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!token) return;
     setBusy(true);
+    setError(null);
     try {
       const [r, a] = await Promise.all([api.reports(token), api.attendance(token)]);
       setReports(r.reports);
       setRecords(a.records);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load history");
     } finally {
       setBusy(false);
     }
@@ -40,10 +44,11 @@ export function HistoryScreen() {
         <Rise>
         <Title>History</Title>
         <Text style={styles.lead}>Check-in times and reports in Pakistan time.</Text>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <SectionLabel>Attendance</SectionLabel>
         {records.length === 0 ? (
-          <EmptyState hint="Your first check-in will appear here." icon="time-outline" title="No attendance yet" />
+          error ? null : <EmptyState hint="Your first check-in will appear here." icon="time-outline" title="No attendance yet" />
         ) : (
           records.map((row) => (
             <Card key={row.id} style={styles.card}>
@@ -66,7 +71,7 @@ export function HistoryScreen() {
 
         <SectionLabel>Reports</SectionLabel>
         {reports.length === 0 ? (
-          <EmptyState hint="Submit a daily report from the Report tab." icon="document-text-outline" title="No reports yet" />
+          error ? null : <EmptyState hint="Submit a daily report from the Report tab." icon="document-text-outline" title="No reports yet" />
         ) : (
           reports.map((report) => (
             <Card key={report.id} style={styles.card}>
@@ -100,4 +105,13 @@ const styles = StyleSheet.create({
   meta: { color: colors.muted, marginTop: 3, fontWeight: "600", fontSize: 13 },
   body: { marginTop: 12, color: colors.ink, fontSize: 15, lineHeight: 22, fontWeight: "600" },
   details: { marginTop: 4, color: colors.muted, lineHeight: 21 },
+  error: {
+    marginTop: 8,
+    backgroundColor: colors.dangerSoft,
+    color: colors.danger,
+    padding: 12,
+    borderRadius: 12,
+    overflow: "hidden",
+    fontWeight: "600",
+  },
 });

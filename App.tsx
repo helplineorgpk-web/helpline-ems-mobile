@@ -13,13 +13,14 @@ import { TeamScreen } from "./src/screens/TeamScreen";
 import { tabIcons } from "./src/icons";
 import { colors, shadow } from "./src/theme";
 import { useKeyboardHeight } from "./src/keyboard";
+import { Button } from "./src/components/ui";
 
 const splashMark = require("./assets/splash-icon.png");
 
 type Tab = "today" | "report" | "history" | "team" | "profile";
 
 function Root() {
-  const { ready, token, employee } = useAuth();
+  const { ready, token, employee, bootError, retryBoot, logout } = useAuth();
   const [tab, setTab] = useState<Tab>("today");
   const isSupervisor = employee?.role === "SUPERVISOR";
   const insets = useSafeAreaInsets();
@@ -31,6 +32,10 @@ function Root() {
 
   if (!ready) {
     return <BootScreen />;
+  }
+
+  if (bootError) {
+    return <BootScreen error={bootError} onRetry={retryBoot} onSignOut={logout} />;
   }
 
   if (!token) {
@@ -75,31 +80,50 @@ function Root() {
   );
 }
 
-function BootScreen() {
+function BootScreen({
+  error,
+  onRetry,
+  onSignOut,
+}: {
+  error?: string;
+  onRetry?: () => void;
+  onSignOut?: () => void;
+} = {}) {
   // Starts exactly where the native splash leaves off (same mark, size and background), then comes alive.
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 420, useNativeDriver: true }),
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(scale, { toValue: 0.95, duration: 900, useNativeDriver: true }),
-          Animated.timing(scale, { toValue: 1, duration: 900, useNativeDriver: true }),
-        ])
-      ),
-    ]).start();
+    // Started separately: the error state drops the pulse, which stops the loop,
+    // and a shared Animated.parallel would then freeze the footer mid-fade.
+    Animated.timing(opacity, { toValue: 1, duration: 420, useNativeDriver: true }).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 0.95, duration: 900, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1, duration: 900, useNativeDriver: true }),
+      ])
+    ).start();
   }, [opacity, scale]);
 
   return (
     <View style={styles.boot}>
       <StatusBar style="dark" />
-      <Animated.Image source={splashMark} style={[styles.bootMark, { transform: [{ scale }] }]} />
-      <Animated.View style={[styles.bootFooter, { opacity }]}>
+      <Animated.Image
+        source={splashMark}
+        style={error ? styles.bootMarkSmall : [styles.bootMark, { transform: [{ scale }] }]}
+      />
+      <Animated.View style={[styles.bootFooter, error && styles.bootFooterInline, { opacity }]}>
         <Text style={styles.bootTitle}>Helpline Staff</Text>
         <Text style={styles.bootLabel}>Helpline Welfare Trust</Text>
-        <ActivityIndicator color={colors.leaf} style={styles.bootSpinner} />
+        {error ? (
+          <View style={styles.bootError}>
+            <Text style={styles.bootErrorText}>{error}</Text>
+            {onRetry ? <Button icon="refresh-outline" label="Try again" onPress={onRetry} /> : null}
+            {onSignOut ? <Button label="Sign out" onPress={onSignOut} tone="ghost" /> : null}
+          </View>
+        ) : (
+          <ActivityIndicator color={colors.leaf} style={styles.bootSpinner} />
+        )}
       </Animated.View>
     </View>
   );
@@ -149,10 +173,14 @@ const styles = StyleSheet.create({
   body: { flex: 1, backgroundColor: colors.canvas },
   boot: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.white },
   bootMark: { width: 200, height: 200 },
+  bootMarkSmall: { width: 140, height: 140 },
   bootFooter: { position: "absolute", left: 0, right: 0, bottom: 84, alignItems: "center" },
+  bootFooterInline: { position: "relative", bottom: 0, alignSelf: "stretch", marginTop: 8 },
   bootTitle: { color: colors.forest, fontSize: 22, fontWeight: "800", letterSpacing: 0.2 },
   bootLabel: { color: colors.leafDark, fontWeight: "800", letterSpacing: 1.6, textTransform: "uppercase", fontSize: 11, marginTop: 6 },
   bootSpinner: { marginTop: 22 },
+  bootError: { alignSelf: "stretch", paddingHorizontal: 24, marginTop: 18, gap: 8 },
+  bootErrorText: { color: colors.muted, textAlign: "center", lineHeight: 20, marginBottom: 6 },
   tabDock: { backgroundColor: colors.canvas, paddingHorizontal: 14, paddingTop: 4 },
   tabs: {
     flexDirection: "row",

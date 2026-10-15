@@ -64,7 +64,8 @@
           }
         }
       ],
-      "./plugins/withPodsXcodeproj"
+      "./plugins/withPodsXcodeproj",
+      "./plugins/withAndroidReleaseSigning"
     ],
     "description": "Attendance and daily reports for Helpline Welfare Trust staff."
   }

@@ -41,6 +41,9 @@ yarn-error.*
 /ios
 /android
 
+# Play upload key and its passwords (back this folder up offline)
+/credentials/
+
 # backend secrets (never commit)
 src/env
 

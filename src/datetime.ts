@@ -22,6 +22,16 @@ export function formatDate(value: string | Date) {
   }).format(date);
 }
 
+// "Mon, 2 Nov" for a Pakistan calendar date ("YYYY-MM-DD").
+export function formatShortDay(date: string) {
+  return new Intl.DateTimeFormat("en-PK", {
+    timeZone: TZ,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(new Date(`${date}T12:00:00+05:00`));
+}
+
 export function greetingNow() {
   const hour = Number(
     new Intl.DateTimeFormat("en-GB", {

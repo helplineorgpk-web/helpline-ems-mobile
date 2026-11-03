@@ -63,7 +63,10 @@ export function HistoryScreen() {
                       : "Still on duty"}
                   </Text>
                 </View>
-                <Badge label={row.checkOutAt ? "Out" : "On duty"} tone={row.checkOutAt ? "muted" : "gold"} />
+                <Badge
+                  label={row.checkOutAt ? (row.autoCheckedOut ? "Auto out" : "Out") : "On duty"}
+                  tone={row.checkOutAt ? "muted" : "gold"}
+                />
               </View>
             </Card>
           ))
@@ -84,6 +87,7 @@ export function HistoryScreen() {
                     {report.project.type ? ` · ${prettyType(report.project.type)}` : ""}
                   </Text>
                 </View>
+                {report.submittedLate ? <Badge label="Added late" tone="gold" /> : null}
               </View>
               <Text style={styles.body}>{report.summary}</Text>
               <Text style={styles.details}>{report.details}</Text>

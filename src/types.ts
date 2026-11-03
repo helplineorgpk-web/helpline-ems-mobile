@@ -41,6 +41,8 @@ export type Attendance = {
   date: string;
   checkInAt: string;
   checkOutAt: string | null;
+  // Closed by the 8 PM auto check-out rather than by the employee.
+  autoCheckedOut?: boolean | null;
   project?: Project | null;
 };
 
@@ -49,6 +51,7 @@ export type DailyReport = {
   date: string;
   summary: string;
   details: string;
+  submittedLate?: boolean | null;
   createdAt: string;
   project: Project;
 };
@@ -59,4 +62,24 @@ export type TodayStatus = {
   reports: DailyReport[];
   checkedIn: boolean;
   checkedOut: boolean;
+  // Optional: older servers do not send these.
+  autoCheckedOut?: boolean;
+  checkinClosed?: boolean;
+  autoCheckoutTime?: string;
+};
+
+// A day in the last few the employee checked in but sent no report.
+export type MissedReportDay = {
+  date: string;
+  month: string;
+  monthLabel: string;
+  usedInMonth: number;
+  remainingInMonth: number;
+  canAdd: boolean;
+};
+
+export type MissedReports = {
+  windowDays: number;
+  limitPerMonth: number;
+  days: MissedReportDay[];
 };

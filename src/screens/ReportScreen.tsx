@@ -5,14 +5,17 @@ import { api } from "../api";
 import { DutyButtons } from "../components/duty-buttons";
 import { Badge, Button, Card, charactersLeft, EmptyState, Field, Icon, IconWell, Screen, SectionLabel, Title } from "../components/ui";
 import { Rise } from "../motion";
-import { formatTime } from "../datetime";
+import { formatShortDay, formatTime } from "../datetime";
 import { iconForProject, prettyType } from "../icons";
 import { colors } from "../theme";
 import { FormScroll } from "../keyboard";
 
 export function ReportScreen() {
-  const { token, projects, today, refresh } = useAuth();
+  const { token, projects, today, missedReports, refresh } = useAuth();
   const [projectId, setProjectId] = useState(projects[0]?.id || "");
+  // null = today's report; otherwise a missed day from missedReports.
+  const [reportDate, setReportDate] = useState<string | null>(null);
+  const missedDays = missedReports?.days ?? [];
   const [summary, setSummary] = useState("");
   const [details, setDetails] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,17 +29,33 @@ export function ReportScreen() {
     if (!projects.some((project) => project.id === projectId)) setProjectId(projects[0]?.id || "");
   }, [projectId, projects]);
 
+  useEffect(() => {
+    // The chosen day was filled, aged out of the window, or used up the month's allowance.
+    if (reportDate && !missedDays.some((day) => day.date === reportDate && day.canAdd)) setReportDate(null);
+  }, [missedDays, reportDate]);
+
   async function submit() {
     if (!token) return;
     setLoading(true);
     setError(null);
     try {
-      await api.submitReport(token, { projectId, summary: summary.trim(), details: details.trim() });
+      const late = reportDate;
+      await api.submitReport(token, {
+        projectId,
+        summary: summary.trim(),
+        details: details.trim(),
+        ...(late ? { date: late } : {}),
+      });
       setSummary("");
       setDetails("");
+      setReportDate(null);
       // The report is saved; a failed refresh only delays the "Submitted today" list.
       await refresh().catch(() => {});
-      Alert.alert("Report sent", "Your report was saved. Use Check out when you finish work.");
+      if (late) {
+        Alert.alert("Missing report added", `Your report for ${formatShortDay(late)} was saved.`);
+      } else {
+        Alert.alert("Report sent", "Your report was saved. Use Check out when you finish work.");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit report");
     } finally {
@@ -74,6 +93,52 @@ export function ReportScreen() {
           </View>
         ) : null}
 
+        {missedDays.length && projects.length ? (
+          <View style={{ marginTop: 8 }}>
+            <SectionLabel>Missed reports ({missedDays.length})</SectionLabel>
+            <Text style={styles.missedLead}>
+              You checked in on these days but sent no report. A missing report can be added within{" "}
+              {missedReports?.windowDays ?? 3} days, for up to {missedReports?.limitPerMonth ?? 2} days a month.
+            </Text>
+            {[null, ...missedDays].map((day) => {
+              const date = day?.date ?? null;
+              const active = reportDate === date;
+              const locked = Boolean(day && !day.canAdd);
+              return (
+                <Pressable
+                  disabled={locked}
+                  key={date ?? "today"}
+                  onPress={() => {
+                    setReportDate(date);
+                    setError(null);
+                  }}
+                >
+                  <Card style={[styles.choice, active && styles.choiceOn, locked && styles.choiceLocked]}>
+                    <IconWell
+                      name={day ? "calendar-outline" : "today-outline"}
+                      tone={active ? "leaf" : "muted"}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.choiceTitle}>{day ? formatShortDay(day.date) : "Today"}</Text>
+                      <Text style={styles.choiceMeta}>
+                        {!day
+                          ? "Today's report"
+                          : day.canAdd
+                            ? `${day.remainingInMonth} of ${missedReports?.limitPerMonth ?? 2} left for ${day.monthLabel}`
+                            : `No missing reports left for ${day.monthLabel}`}
+                      </Text>
+                    </View>
+                    <Icon
+                      color={active ? colors.leaf : colors.line}
+                      name={locked ? "lock-closed-outline" : active ? "radio-button-on" : "radio-button-off-outline"}
+                    />
+                  </Card>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+
         {projects.length === 0 ? (
           <EmptyState
             hint="Ask admin to assign you from the Helpline dashboard."
@@ -82,7 +147,13 @@ export function ReportScreen() {
           />
         ) : (
           <View style={{ marginTop: 8 }}>
-            <SectionLabel>{today?.reports?.length ? "Add another report" : "Write today's report"}</SectionLabel>
+            <SectionLabel>
+              {reportDate
+                ? `Missing report for ${formatShortDay(reportDate)}`
+                : today?.reports?.length
+                  ? "Add another report"
+                  : "Write today's report"}
+            </SectionLabel>
             {projects.map((project) => {
               const active = projectId === project.id;
               return (
@@ -112,7 +183,7 @@ export function ReportScreen() {
               icon="reader-outline"
               label="Short summary"
               onChangeText={setSummary}
-              placeholder="One line about today"
+              placeholder={reportDate ? "One line about that day" : "One line about today"}
               value={summary}
             />
             <Field
@@ -126,7 +197,7 @@ export function ReportScreen() {
             <Button
               disabled={!canSubmit}
               icon="send-outline"
-              label="Submit report"
+              label={reportDate ? "Add missing report" : "Submit report"}
               loading={loading}
               onPress={submit}
             />
@@ -143,6 +214,8 @@ const styles = StyleSheet.create({
   lead: { color: colors.muted, marginTop: 6, marginBottom: 10, lineHeight: 21, fontSize: 15 },
   choice: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 10 },
   choiceOn: { borderColor: colors.leaf, backgroundColor: colors.leafSoft },
+  choiceLocked: { opacity: 0.55 },
+  missedLead: { color: colors.muted, marginBottom: 10, lineHeight: 20 },
   choiceTitle: { fontWeight: "800", color: colors.ink, fontSize: 16 },
   choiceMeta: { color: colors.muted, marginTop: 2, fontWeight: "600", fontSize: 12 },
   error: {

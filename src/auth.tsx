@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api, isTemporaryError, setUnauthorizedHandler } from "./api";
 import { clearStoredToken, getStoredToken, setStoredToken } from "./storage";
-import type { Employee, Project, TodayStatus } from "./types";
+import type { Employee, MissedReports, Project, TodayStatus } from "./types";
 
 type AuthState = {
   ready: boolean;
@@ -9,6 +9,7 @@ type AuthState = {
   employee: Employee | null;
   projects: Project[];
   today: TodayStatus | null;
+  missedReports: MissedReports | null;
   error: string | null;
   bootError: string | null;
   retryBoot: () => Promise<void>;
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [today, setToday] = useState<TodayStatus | null>(null);
+  const [missedReports, setMissedReports] = useState<MissedReports | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
 
@@ -35,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setEmployee(data.employee);
     setProjects(data.projects);
     setToday(data.today);
+    setMissedReports(data.missedReports ?? null);
     setToken(nextToken);
     setError(null);
   }, []);
@@ -77,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setEmployee(null);
     setProjects([]);
     setToday(null);
+    setMissedReports(null);
     setBootError(null);
   }, []);
 
@@ -120,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       employee,
       projects,
       today,
+      missedReports,
       error,
       bootError,
       retryBoot: boot,
@@ -129,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       checkin,
       checkout,
     }),
-    [ready, token, employee, projects, today, error, bootError, boot, login, logout, refresh, checkin, checkout]
+    [ready, token, employee, projects, today, missedReports, error, bootError, boot, login, logout, refresh, checkin, checkout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

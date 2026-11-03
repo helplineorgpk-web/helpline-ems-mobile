@@ -71,7 +71,14 @@ export function DutyButtons() {
   return (
     <View style={styles.row}>
       <View style={styles.col}>
-        <Button disabled={onDuty} icon="enter-outline" label="Check in" loading={busy === "in"} onPress={onCheckin} />
+        <Button
+          // Check-in closes at 8 PM, when open duty is checked out automatically.
+          disabled={onDuty || Boolean(today?.checkinClosed)}
+          icon="enter-outline"
+          label="Check in"
+          loading={busy === "in"}
+          onPress={onCheckin}
+        />
       </View>
       <View style={styles.col}>
         <Button

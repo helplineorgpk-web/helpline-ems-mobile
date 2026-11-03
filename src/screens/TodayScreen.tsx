@@ -14,6 +14,7 @@ export function TodayScreen() {
   const [error, setError] = useState<string | null>(null);
   const firstName = employee?.name?.split(" ")[0] || "there";
   const onDuty = Boolean(today?.checkedIn && !today?.checkedOut);
+  const cutoff = today?.autoCheckoutTime || "8:00 PM";
 
   const onRefresh = useCallback(async () => {
     setBusy(true);
@@ -64,7 +65,15 @@ export function TodayScreen() {
               <Pulse active={onDuty}>
                 <Badge
                   icon={today?.checkedOut ? "checkmark-circle" : today?.checkedIn ? "radio-button-on" : "time-outline"}
-                  label={today?.checkedOut ? "Checked out" : today?.checkedIn ? "On duty" : "Not in"}
+                  label={
+                    today?.autoCheckedOut
+                      ? "Auto checked out"
+                      : today?.checkedOut
+                        ? "Checked out"
+                        : today?.checkedIn
+                          ? "On duty"
+                          : "Not in"
+                  }
                   tone={today?.checkedOut ? "muted" : today?.checkedIn ? "gold" : "danger"}
                 />
               </Pulse>
@@ -87,6 +96,7 @@ export function TodayScreen() {
                   <Text style={styles.time}>
                     {today?.attendance?.checkOutAt ? formatTime(today.attendance.checkOutAt) : "—"}
                   </Text>
+                  {today?.autoCheckedOut ? <Text style={styles.timeLabel}>Automatic</Text> : null}
                 </View>
               </View>
             </View>
@@ -96,10 +106,18 @@ export function TodayScreen() {
               <IconWell name={onDuty ? "leaf-outline" : today?.checkedOut ? "checkmark-done-outline" : "time-outline"} size={36} />
               <Text style={styles.noteText}>
                 {!today?.checkedIn
-                  ? "Check in when you arrive. Check out asks for today's report before duty ends."
-                  : today.checkedOut
-                    ? "Checked out. Check in again if you come back today."
-                    : "You are on duty. Check out writes today's report, then ends duty."}
+                  ? today?.checkinClosed
+                    ? `Check-in is closed for today. It opens again tomorrow.`
+                    : `Check in when you arrive. Check out asks for today's report. Duty ends automatically at ${cutoff}.`
+                  : today.autoCheckedOut
+                    ? today.reports.length
+                      ? `Duty was checked out automatically at ${cutoff}.`
+                      : `Duty was checked out automatically at ${cutoff}. You can still send today's report from the Report tab.`
+                    : today.checkedOut
+                      ? today.checkinClosed
+                        ? "Checked out. Check-in is closed for today."
+                        : `Checked out. Check in again if you come back before ${cutoff}.`
+                      : `You are on duty. Check out writes today's report, then ends duty. Duty ends automatically at ${cutoff}.`}
               </Text>
             </View>
           </Card>

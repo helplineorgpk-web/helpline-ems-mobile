@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 import { Platform } from "react-native";
-import type { Attendance, DailyReport, Employee, Project, TeamMember, TodayStatus } from "./types";
+import type { Attendance, DailyReport, Employee, MissedReports, Project, TeamMember, TodayStatus } from "./types";
 
 function guessHost() {
   const hostUri =
@@ -90,7 +90,7 @@ export const api = {
     });
   },
   me(token: string) {
-    return request<{ employee: Employee; projects: Project[]; today: TodayStatus }>("/api/app/me", {
+    return request<{ employee: Employee; projects: Project[]; today: TodayStatus; missedReports?: MissedReports }>("/api/app/me", {
       token,
     });
   },
@@ -112,7 +112,8 @@ export const api = {
   },
   submitReport(
     token: string,
-    payload: { projectId: string; summary: string; details: string }
+    // date: a missed day (YYYY-MM-DD) from missedReports; omit for today.
+    payload: { projectId: string; summary: string; details: string; date?: string }
   ) {
     return request<{ report: DailyReport; attendance: Attendance | null }>("/api/app/reports", {
       method: "POST",

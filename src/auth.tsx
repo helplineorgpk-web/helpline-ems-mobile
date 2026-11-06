@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api, isTemporaryError, setUnauthorizedHandler } from "./api";
 import { clearStoredToken, getStoredToken, setStoredToken } from "./storage";
+import { cancelDutyReminder, requestReminderPermission, syncDutyReminder } from "./reminder";
 import type { Employee, MissedReports, Project, TodayStatus } from "./types";
 
 type AuthState = {
@@ -74,7 +75,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [hydrate]
   );
 
+  // Reschedules (or cancels) the 7:30 PM reminder whenever today's duty status changes.
+  useEffect(() => {
+    if (token) syncDutyReminder(today);
+  }, [today, token]);
+
   const clearSession = useCallback(async () => {
+    await cancelDutyReminder();
     await clearStoredToken();
     setToken(null);
     setEmployee(null);
@@ -106,6 +113,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (projectId?: string) => {
       if (!token) return;
       await api.checkin(token, projectId);
+      // Asked here rather than at launch, so the prompt comes with an obvious reason.
+      await requestReminderPermission();
       await hydrate(token);
     },
     [hydrate, token]

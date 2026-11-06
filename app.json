@@ -55,6 +55,13 @@
           "backgroundColor": "#ffffff"
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#1d6a38"
+        }
+      ],
       "expo-font",
       [
         "expo-build-properties",

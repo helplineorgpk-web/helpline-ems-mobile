@@ -13,6 +13,7 @@ Helpline Staff is the internal attendance and daily-reporting app of Helpline We
 | Attendance records: the date and time of each check-in and check-out, and the project you checked in to | Created when you press Check in or Check out | To keep the Trust's attendance record |
 | Daily reports: the summary and details you write, and the project they relate to | Typed by you | To record the work carried out on each project |
 | Sign-in token | Created when you sign in | Kept in your device's secure storage so you stay signed in |
+| Duty reminder (only if you allow notifications) | Created on your phone when you are on duty | To remind you at 7:30 PM to send your report before duty closes at 8 PM. Nothing is sent to the Trust |
 
 The app does **not** collect your location, contacts, photos, files, microphone or camera data, advertising identifiers or device identifiers. It contains no advertising and no third-party analytics or tracking.
 

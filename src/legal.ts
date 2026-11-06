@@ -18,6 +18,7 @@ export const legalDocs: Record<LegalDoc, { title: string; intro: string; section
           "Attendance: the date and time of each check-in and check-out, and the project you checked in to.",
           "Daily reports: the summary and details you write, and the project they relate to.",
           "Sign-in token: kept in your device's secure storage so you stay signed in.",
+          "Duty reminder: if you allow notifications, the app sets a reminder on your phone for 7:30 PM on days you are on duty. It is created on the device; no notification token or other data is sent to the Trust.",
         ],
       },
       {

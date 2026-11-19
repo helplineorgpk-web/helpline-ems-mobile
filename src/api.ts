@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import type { Attendance, DailyReport, Employee, MissedReports, Project, TeamMember, TodayStatus } from "./types";
+import type { CheckinLocationResult } from "./location";
 
 function guessHost() {
   const hostUri =
@@ -97,11 +98,15 @@ export const api = {
   projects(token: string) {
     return request<{ projects: Project[] }>("/api/app/projects", { token });
   },
-  checkin(token: string, projectId?: string) {
+  checkin(token: string, projectId?: string, place?: CheckinLocationResult) {
     return request<{ attendance: Attendance; alreadyCheckedIn: boolean }>("/api/app/checkin", {
       method: "POST",
       token,
-      body: JSON.stringify(projectId ? { projectId } : {}),
+      body: JSON.stringify({
+        ...(projectId ? { projectId } : {}),
+        ...(place ? { locationStatus: place.status } : {}),
+        ...(place?.status === "OK" ? { location: place.location } : {}),
+      }),
     });
   },
   checkout(token: string) {

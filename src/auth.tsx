@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { api, isTemporaryError, setUnauthorizedHandler } from "./api";
 import { clearStoredToken, getStoredToken, setStoredToken } from "./storage";
 import { cancelDutyReminder, requestReminderPermission, syncDutyReminder } from "./reminder";
+import { getCheckinLocation } from "./location";
 import type { Employee, MissedReports, Project, TodayStatus } from "./types";
 
 type AuthState = {
@@ -112,7 +113,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkin = useCallback(
     async (projectId?: string) => {
       if (!token) return;
-      await api.checkin(token, projectId);
+      // Never blocks check-in: without a position the reason is sent and shown on the dashboard.
+      const place = await getCheckinLocation();
+      await api.checkin(token, projectId, place);
       // Asked here rather than at launch, so the prompt comes with an obvious reason.
       await requestReminderPermission();
       await hydrate(token);

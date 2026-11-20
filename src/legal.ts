@@ -2,7 +2,7 @@ export type LegalDoc = "privacy" | "terms";
 
 type Section = { heading: string; body: string[] };
 
-export const LEGAL_UPDATED = "8 October 2026";
+export const LEGAL_UPDATED = "19 November 2026";
 
 export const legalDocs: Record<LegalDoc, { title: string; intro: string; sections: Section[] }> = {
   privacy: {
@@ -16,6 +16,7 @@ export const legalDocs: Record<LegalDoc, { title: string; intro: string; section
           "Profile details: your name, work email, phone number, employee code, designation and role. These are entered by the Trust's administrator when your account is created.",
           "Password: set by the administrator and used only to sign you in. It is sent over an encrypted connection and is not stored on your device.",
           "Attendance: the date and time of each check-in and check-out, and the project you checked in to.",
+          "Check-in location: if you allow location access, the app reads your phone's precise location once, at the moment you tap Check in, and sends it with your check-in so the Trust's administrators can see where you checked in. On Android it also notes whether the position came from a fake-GPS app. If you do not allow it, or the phone cannot find a location, you can still check in and the record shows that no location was received. Location is never read in the background or at any other time.",
           "Daily reports: the summary and details you write, and the project they relate to.",
           "Sign-in token: kept in your device's secure storage so you stay signed in.",
           "Duty reminder: if you allow notifications, the app sets a reminder on your phone for 7:30 PM on days you are on duty. It is created on the device; no notification token or other data is sent to the Trust.",
@@ -24,7 +25,7 @@ export const legalDocs: Record<LegalDoc, { title: string; intro: string; section
       {
         heading: "What we do not collect",
         body: [
-          "The app does not collect your location, contacts, photos, files, microphone or camera data, advertising identifiers or device identifiers. It contains no advertising and no third-party analytics or tracking.",
+          "The app does not track your location (apart from the single reading at check-in described above), and does not collect your contacts, photos, files, microphone or camera data, advertising identifiers or device identifiers. It contains no advertising and no third-party analytics or tracking.",
         ],
       },
       {

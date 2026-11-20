@@ -2,7 +2,7 @@
   "expo": {
     "name": "Helpline Staff",
     "slug": "helpline-staff",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
         }
       },
       "bundleIdentifier": "com.helplines.staff",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -29,11 +29,13 @@
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
       "package": "com.helpline.staff",
-      "versionCode": 1,
+      "versionCode": 2,
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.SYSTEM_ALERT_WINDOW"
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "web": {
@@ -63,6 +65,15 @@
         }
       ],
       "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Helpline Staff records where you are when you check in, so your admin can see your check-in location. It is not tracked at any other time.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false,
+          "isIosBackgroundLocationEnabled": false
+        }
+      ],
       [
         "expo-build-properties",
         {
